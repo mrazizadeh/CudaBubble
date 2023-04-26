@@ -1,0 +1,52 @@
+lionxo:
+110: Re = 1, eta = 3, ga = 1, M1 = M2 = 1e5.      	21012
+111: Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.		94797	
+112: Re = 1, eta = 3, ga = 1, M1 = M2 = 1e3.		100411
+113: Re = 0.1, eta = 3, ga = 1, M1 = M2 = 1e5.		21418
+114: Re = 0.01, eta = 3, ga = 1, M1 = M2 = 1e5. 	 7794
+115: Re = 1, eta = 30, ga = 1, M1 = M2 = 1e5.		17505
+116: Re = 1, eta = 300, ga = 1, M1 = M2 = 1e5.		17729
+117: Re = 1, eta = 3, ga = 10, M1 = M2 = 1e5.		 1889
+118: Re = 1, eta = 3, ga = 100, M1 = M2 = 1e5.		  234
+
+107: Re = 0.1, eta = 3, ga = 1, M1 = M2 = 1e5.
+108: Re = 1, eta = 3, ga = 1, M1 = M2 = 1e3.
+114: Re = 0.01, eta = 3, ga = 1, M1 = M2 = 1e5.
+115: 
+
+
+lionxm:
+100: Re = 1, eta = 0.1, ga = 1, M1 = M2 = 1e4.
+101: Re = 0.1, eta = 0.1, ga = 1, M1 = M2 = 1e4.
+102: Two ellipse, Re = 1, eta = 1, ga = 1, M1 = M2 = 1e4.
+103: Two ellipse, Re = 1, eta = 0.1, ga = 1, M1 = M2 = 1e4.
+104: Small ball, Re = 0.1, eta = 300, ga = 1, M1 = M2 = 1e4.
+105: Small ball flush by cos fluid slow, Re = 0.1, eta = 300, ga = 1, M1 = M2 = 1e4. 
+106: One ellipse, flush by fluid curve, Re = 1, eta = 0.1, ga = 1, M1 = M2 = 1e4.
+107: small ball, flush by cos fluid fast, Re = 0.1, eta = 300, ga = 1, M1 = M2 = 1e4.
+108: small ball, flush by cos fluid fast, Re = 0.1, eta = 3000, ga = 1, M1 = M2 = 1e4.
+110: Re = 1, eta = 3, ga = 1, M1 = M2 = 1e5.      fixed_time_step = 5e-8	
+111: Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.	  fixed_time_step = 3e-7		
+112: Re = 1, eta = 3, ga = 1, M1 = M2 = 1e3.	  fixed_time_step = 5e-7		
+113: Re = 1, eta = 3, ga = 1, M1 = M2 = 3e3.	  fixed_time_step = 3e-7
+
+114: Test for grid size: 65x65x64 eps=2h	Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.	
+115: Test for grid size: 81x81x80 eps=2.5h	Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.	
+116: Test for grid size: 61x61x60 eps=2.5h	Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.
+117: Test for grid size: 49x49x48 eps=2h	Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.
+118: Test for eps: 65x65x64 eps=2.5h	Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.	
+119: Test for eps: 65x65x64 eps=1.77h	Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.	
+120: Test for time step: Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.	  fixed_time_step = 3e-7, fluid time_step = 1e-5
+121: Test for time step: Re = 1, eta = 3, ga = 1, M1 = M2 = 1e4.	  fixed_time_step = 5e-7, fluid time_step = 5e-6
+
+122: init_3spheres_vertical-20, flush by cos fast. eta = 1000
+123: init_ciga_horizontal-22, flush, eta = 0.1
+124: init_torus_small_ball-23, flush, eta = 1000
+125: init_torus_big_ball-24, flush by cos fast. eta = 1000
+126: init_torus_bing-25, flush, eta = 1
+127: init_two_torus_ring-26, eta = 1
+128: init_cherry-16, eta = 1
+129: init_1sphere_small_right-29, flush by cos fluid fast, Re = 10, eta = 3000, ga = 1, M1 = M2 = 1e4.
+130: init_2sphere_small-30, flush by cos fluid fast, Re = 10, eta = 3000, ga = 1, M1 = M2 = 1e4.
+
+

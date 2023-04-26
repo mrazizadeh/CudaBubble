@@ -1,0 +1,74 @@
+234    65  65  64    1    1    1      1		6e-8       5e-6             1		     6     -1     1        260      0      30      1.0        10       1.0     -202.67		45.43	       1.0e4       1.0e4      0.0e4	0.0e4	4.0     10                 0.0		0	2.0	-1.5	10.0		0.230478
+folder nx  ny  nz   lenx leny lenz   shape	time_step fluid_time_step  fixed_time_step  ninit nflush surctrl  epssize ncur   angle    Re         eta      gamma   alpha    		beta        	M1          M2        M3	M4	tmax    output_interval    gweight	einit	k	c	lineten		alpha_3
+
+
+lenx leny lenz: 1 means one times of 2PI.
+
+ninit:	0: sphere
+	1: 2spheres, one small, one larger
+	2: ellipse, 2:1, 0.75
+	3: triflower
+	4: gtorus, 2:1, 0.1*PI*(0.75*cos(theta)+2.25)
+	5: ellipse2, 2:1, 0.83
+	6: ellipse3, 3:1, 0.8
+	7: Load shape from file, for velocity, if no file use zero.
+	8: vtorus
+	9: htorus
+	10: 1sphere_right
+	11: ellipse4, 3:1, 0.8
+	12: gtorus2, 3:1, 2*PI/11.0*(cos(theta)+2.0)
+	13: init_2ellipse
+	14: 3 spheres with same size and on one plan
+	15: hulu
+	16: cherry
+	17: 3 spheres touch
+	18: 3 spheres on curve
+	19: 3 spheres on curve and touch
+	20: init_3spheres_vertical
+	21: init_ciga_vertical
+	22: init_ciga_horizontal
+	23: init_torus_small_ball
+	24: init_torus_big_ball
+	25: init_torus_bing
+	26: init_two_torus_ring
+	27: init_cherry_inverse
+	28: init_art_cherry
+
+nflush: -1, static,
+	0,  zero speed.
+	1: flush
+	2: flush jet at x-z plan
+	3: flush jet at left point
+	4: flush jet at left point -- slow;
+	5: fluid flush -- slow; 
+	6: fluid flush cos slow;
+	7: fluid flush jet at left point -- middle speed;
+	8: fluid flush -- slow;
+	9: flush jet at x-z plan 2
+	10: fluid flush curve
+	11: fluid flush cos fast;
+surctrl:
+	0: No Surface Control
+	1: All control
+epssize:
+	0: middle 2.0h
+	1: small, 1.77h
+	2: larger, 2.5h
+	other: middle 2.0h
+ncur: 
+	0: no spontaneous curvature
+	1: spontaneous curvature = 1.0
+	2: eight corner spontaneous curvature <0.15 PI, c = 6.0.
+	3: up-down spontaneous curvature  <0.15 PI, c = 6.0.
+
+angle: 
+	in degree. 30 is pi/6; 90 is pi/2.
+	put a negative value for the default value.
+eta    gamma   alpha    beta        M1          M2
+	-1: auto select
+	
+
+output_interval: 
+       30 means 30 seconds.
+       
+       
