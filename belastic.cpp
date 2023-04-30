@@ -38,12 +38,11 @@ double belastic::intf(DARR3D s)
 	DARR3D d, ret1, ret2;
 	d = mem.get_array();
 	ret1 = mem.get_array();
-	ret2 = mem.get_array();
 	double ret;
 	double* value;
 	cudaMalloc(&value, sizeof(double));
 	calc->multi(s, s, d);
-	calc->intf(d, ret1, ret2, value, 0, 1);
+	calc->intf(d, ret1, value, 0, 1);
 	cudaMemcpy(&ret, value, sizeof(double), cudaMemcpyDeviceToHost);
 	cudaFree(value);
 	return ret;

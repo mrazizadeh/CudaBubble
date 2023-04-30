@@ -16,7 +16,7 @@ public:
 
 	void f(DARR3D f, DARR3D lap, DARR3D d, double eps);
 	void g0(DARR3D g0, DARR3D d, DARR3D f, double eps);
-	void intf(DARR3D f, DARR3D ret1, DARR3D ret2, double* val, double addition, double multiply);
+	void intf(DARR3D f, DARR3D ret1, double* val, double addition, double multiply);
 	void nld(DARR3D nldp, DARR3D d, DARR3D f, DARR3D tmp1, double eps, double kappa, double D);
 	void lap(cufftDoubleComplex* fd, DARR3D out);
 	void lap(DARR3D d, DARR3D out);

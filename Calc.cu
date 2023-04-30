@@ -153,7 +153,7 @@ void Calc::g0(DARR3D g0, DARR3D d, DARR3D f, double eps)
 }
 
 
-__global__ void sumArray_kernel(double* a, int N, double* result, double* val, double addition, double multiply)
+__global__ void sumArray_kernel(double* a, int N, double* val, double addition, double multiply)
 {
     // Allocate shared memory for the block
     __shared__ double sdata[THREADS_PER_BLOCK];
@@ -181,31 +181,25 @@ __global__ void sumArray_kernel(double* a, int N, double* result, double* val, d
     }
 
     // Write the result back to global memory
-    if (threadIdx.x == 0) {
-        result[blockIdx.x] = sdata[0];
-        if (tid == 0) {
-            *val = (result[0]+addition) * multiply;
-        }
+    if (tid == 0) {
+            *val = (sdata[0]+addition) * multiply;
     }
 }
 
-__global__ void intf_kernel(double * u, int N, double* ret, double* val, double addition, double multiply)
+__global__ void intf_kernel(double * u, int N, double* ret)
 {
     // Allocate shared memory for the block
     __shared__ double sdata[THREADS_PER_BLOCK];
+    const int gridSize = THREADS_PER_BLOCK * gridDim.x;
 
     // Calculate the thread index
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    int gid = threadIdx.x + blockIdx.x * blockDim.x;
+    int tid = threadIdx.x;
 
-    // Copy data from global to shared memory
-    if (tid < N) {
-        sdata[threadIdx.x] = u[tid];
-    }
-    else {
-        sdata[threadIdx.x] = 0.0;
-    }
-
-    // Synchronize threads to ensure all data has been copied
+    double sum = 0;
+    for (int i = gid; i < N; i += gridSize)
+        sum += u[i];
+    sdata[tid] = sum;
     __syncthreads();
 
     // Reduce within the block
@@ -219,27 +213,17 @@ __global__ void intf_kernel(double * u, int N, double* ret, double* val, double 
     // Write the result back to global memory
     if (threadIdx.x == 0) {
         ret[blockIdx.x] = sdata[0]/N;  //averaged!
-        if (tid == 0) {
-            *val = (ret[0] + addition) * multiply;
-        }
     }
 }
 
-//average all and put result in ret1[0], ret2 is temporay use.
-void Calc::intf(DARR3D u, DARR3D ret1, DARR3D ret2, double * val, double addition, double multiply)
+//average all and put result in ret1[0], 
+void Calc::intf(DARR3D u, DARR3D ret1, double * val, double addition, double multiply)
 {
-    int n = (nx*ny*nz + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-    intf_kernel << <n, THREADS_PER_BLOCK >> > (u, nx * ny * nz, ret1, val, addition, multiply * xlen * ylen * zlen);
-    cudaDeviceSynchronize();
+    static const int gridSize = 24; //this number is hardware-dependent; usually #SM*2 is a good number.
 
-    while (n > 1) {
-        DARR3D t;
-        t = ret1; ret1 = ret2; ret2 = t;
-        int m = n;
-        n = (n + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-        sumArray_kernel << <n, THREADS_PER_BLOCK >> > (ret2, m, ret1, val, addition, multiply * xlen * ylen * zlen);
-    }
-
+    intf_kernel << <gridSize, THREADS_PER_BLOCK >> > (u, nx * ny * nz, ret1);
+    sumArray_kernel << <1, THREADS_PER_BLOCK >> > (ret1, gridSize, val, addition, multiply * xlen * ylen * zlen);
+ 
     cudaDeviceSynchronize();
 }
 

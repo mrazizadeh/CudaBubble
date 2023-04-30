@@ -283,7 +283,7 @@ void phasefield::gradient()
 double * phasefield::vol()
 {
 	if (b_cur_vol) return m_cur_vol;
-	calc->intf(m_d, tmp1, tmp2, m_cur_vol, 1.0, 0.5);
+	calc->intf(m_d, tmp1, m_cur_vol, 1.0, 0.5);
 	b_cur_vol = true;
 	return m_cur_vol;
 }
@@ -310,7 +310,7 @@ DARR3D phasefield::s()
 double* phasefield::surface()
 {
 	if (b_cur_surf) return m_cur_surf;
-	calc->intf(s(), tmp1, tmp2, m_cur_surf, 0.0, 3.0 / (2.0 * sqrt(2.0)));
+	calc->intf(s(), tmp1, m_cur_surf, 0.0, 3.0 / (2.0 * sqrt(2.0)));
 	b_cur_surf = true;
 	return m_cur_surf;
 }
@@ -319,7 +319,7 @@ double* phasefield::elastic_eng()
 {
 	if (b_elastic_eng) return m_elastic_eng;
 	calc->multi(fc(), fc(), tmp1);
-	calc->intf(tmp1, tmp2, tmp3, m_elastic_eng, 0.0, 1.0 / (eps * 2));
+	calc->intf(tmp1, tmp2, m_elastic_eng, 0.0, 1.0 / (eps * 2));
 	b_elastic_eng = true;
 	return m_elastic_eng;
 }
@@ -327,7 +327,7 @@ double* phasefield::elastic_eng()
 double* phasefield::LSerror(DARR3D u)
 {
 	calc->multi(u, u, tmp1);
-	calc->intf(tmp1, tmp2, tmp3, m_LSerror, 0.0, 1.0);
+	calc->intf(tmp1, tmp2, m_LSerror, 0.0, 1.0);
 	return m_LSerror;
 }
 
