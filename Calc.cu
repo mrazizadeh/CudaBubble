@@ -6,6 +6,40 @@
 #include <cufft.h>
 #include <cufftw.h>
 
+int GPU_SM = 12;
+
+void queryGpus() {
+    int nDevices;
+    cudaGetDeviceCount(&nDevices);
+    printf("Printing device information just for my sake...\n");
+    for (int i = 0; i < nDevices; i++) {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop, i);
+        printf("Device Number: %d\n", i);
+        printf("  Device name: %s\n", prop.name);
+        printf("  Major revision number: %d\n", prop.major);
+        printf("  Minor revision number: %d\n", prop.minor);
+        // Added this
+        printf("  Maximum number of blocks: %d\n", prop.maxGridSize[0]);
+        printf("  Total shared memory per block (Bytes): %u\n", prop.sharedMemPerBlock);
+        printf("  Total registers per block: %d\n", prop.regsPerBlock);
+        printf("  Warp size: %d\n", prop.warpSize);
+        printf("  Maximum threads per block: %d\n", prop.maxThreadsPerBlock);
+        printf("  Clock rate (KHz): %d\n", prop.clockRate);
+        printf("  Memory Clock Rate (KHz): %d\n", prop.memoryClockRate);
+        printf("  Memory Bus Width (bits): %d\n", prop.memoryBusWidth);
+        printf("  Total VRAM (Bytes): %u\n", prop.totalGlobalMem);
+        printf("  Total constant memory (Bytes): %u\n", prop.totalConstMem);
+        printf("  Number of SMs: %d\n", prop.multiProcessorCount);      GPU_SM = prop.multiProcessorCount;
+        printf("  Peak Memory Bandwidth (GB/s): %f\n",
+            2.0 * prop.memoryClockRate * (prop.memoryBusWidth / 8) / 1.0e6);
+        printf("  Concurrent copy and execution: %s\n", (prop.deviceOverlap ? "Yes" : "No"));
+        printf("  Concurrent kernels: %s\n", (prop.concurrentKernels ? "Yes" : "No"));
+        printf("  Kernel execution timeout: %s\n", (prop.kernelExecTimeoutEnabled ? "Yes" : "No"));
+    }
+
+}
+
 Calc::Calc(int nx1, int nz1, double lenx1)
 {
     nx = nx1;
@@ -26,7 +60,7 @@ Calc::Calc(int nx1, int nz1, double lenx1)
     cudaMalloc(&ctmp2, (nx / 2 + 1) * ny * nz * sizeof(cufftDoubleComplex));
     cudaMalloc(&ctmp3, (nx / 2 + 1) * ny * nz * sizeof(cufftDoubleComplex));
     //cudaMalloc(&fftbackcopy, (nx / 2 + 1) * ny * nz * sizeof(cufftDoubleComplex));
-    
+    queryGpus();
 }
 
 Calc::~Calc()
@@ -42,11 +76,9 @@ Calc::~Calc()
 
 __global__ void normalize_kernel(cufftDoubleComplex *s, double factor, int N)
 {
-    // Calculate the thread index
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    const int gridSize = THREADS_PER_BLOCK * gridDim.x;
 
-    // Copy data from global to shared memory
-    if (tid < N) {
+    for (int tid = threadIdx.x + blockIdx.x * blockDim.x; tid < N; tid += gridSize) {
         s[tid].x *= factor;
         s[tid].y *= factor;
     }
@@ -57,7 +89,10 @@ void Calc::r2c_3d_f(DARR3D u, cufftDoubleComplex* s)
 {
     int N = (nx/2+1) * ny * nz;
     cufftExecD2Z(planf, u, s);
-    normalize_kernel << <(N + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK >> > (s, 1.0/(nx*ny*nz), N);   //normalized
+
+    static const int gridSize = GPU_SM * 2; //this number is hardware-dependent; usually #SM*2 is a good number.
+    normalize_kernel << <gridSize, THREADS_PER_BLOCK >> > (s, 1.0/(nx*ny*nz), N);   //normalized
+    cudaDeviceSynchronize();
 }
 
 //the s data will be changed, I commented the version with backup
@@ -219,7 +254,7 @@ __global__ void intf_kernel(double * u, int N, double* ret)
 //average all and put result in ret1[0], 
 void Calc::intf(DARR3D u, DARR3D ret1, double * val, double addition, double multiply)
 {
-    static const int gridSize = 24; //this number is hardware-dependent; usually #SM*2 is a good number.
+    static const int gridSize = GPU_SM * 2; //this number is hardware-dependent; usually #SM*2 is a good number.
 
     intf_kernel << <gridSize, THREADS_PER_BLOCK >> > (u, nx * ny * nz, ret1);
     sumArray_kernel << <1, THREADS_PER_BLOCK >> > (ret1, gridSize, val, addition, multiply * xlen * ylen * zlen);
@@ -229,34 +264,35 @@ void Calc::intf(DARR3D u, DARR3D ret1, double * val, double addition, double mul
 
 __global__ void nld_kernel1(DARR3D d, DARR3D tmp1, double kappa, int N)
 {
-    // Calculate the thread index
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    const int gridSize = THREADS_PER_BLOCK * gridDim.x;
 
-    if (tid < N) {
+    for (int tid = threadIdx.x + blockIdx.x * blockDim.x; tid < N; tid += gridSize) {
         tmp1[tid] = d[tid] * (d[tid] * d[tid] - 1.0 - kappa);
     }
 }
 
 __global__ void nld_kernel2(DARR3D nld, DARR3D tmp1, DARR3D d, DARR3D f, double eps, double D, int N)
 {
-    // Calculate the thread index
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    const int gridSize = THREADS_PER_BLOCK * gridDim.x;
+
+    eps = 1 / eps;
     double eps2 = eps * eps;
     double eps3 = eps * eps2;
-
-    if (tid < N) {
-        nld[tid] = -nld[tid] / eps + D * tmp1[tid] / eps3 + (3 * d[tid] * d[tid] - D - 1) / eps2 * f[tid];
+    for (int tid = threadIdx.x + blockIdx.x * blockDim.x; tid < N; tid += gridSize) {
+        nld[tid] = -nld[tid] * eps + D * tmp1[tid] * eps3 + (3 * d[tid] * d[tid] - D - 1) * eps2 * f[tid];
     }
 }
+
 void Calc::nld(DARR3D nldp, DARR3D d, DARR3D f, DARR3D tmp1, double eps, double kappa, double D)
 {
+    static const int gridSize = GPU_SM * 2; //this number is hardware-dependent; usually #SM*2 is a good number.
 
-    nld_kernel1 << <(nx * ny * nz + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK >> > (d, tmp1, kappa, nx*ny*nz);
+    nld_kernel1 << <gridSize, THREADS_PER_BLOCK >> > (d, tmp1, kappa, nx*ny*nz);
     cudaDeviceSynchronize();
 
     lap(tmp1, nldp);
 
-    nld_kernel2 << <(nx * ny * nz + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK >> > (nldp, tmp1, d, f, eps, D, nx * ny * nz);
+    nld_kernel2 << <gridSize, THREADS_PER_BLOCK >> > (nldp, tmp1, d, f, eps, D, nx * ny * nz);
     cudaDeviceSynchronize();
 }
 
